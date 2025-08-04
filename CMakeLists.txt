@@ -20,3 +20,5 @@ endif()
 
 add_subdirectory(OASIMlib)
 add_subdirectory(test)
+add_subdirectory(benchmark)
+
