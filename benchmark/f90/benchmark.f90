@@ -5,6 +5,9 @@ program benchmark
     implicit none
     !----------------------------
     logical :: error
+    ! Vriables for timing the main loop 
+    !----------------------------
+    real :: start, finish, elapsed
     ! netCDF variables section
     !------------------------------------------------------------------------------------ 
     ! Netcdf variables 
@@ -154,10 +157,12 @@ program benchmark
 
     ! Main computation loop
     !---------------------
-    write(*, *) "Starting benchmark computations..."
     
-    do iter = 1, n_iter
-        write(*, '(A,I0,A,I0)') "Processing iteration ", iter, " of ", n_iter
+    call cpu_time(start) ! Starting the timing 
+    ! write(*, *) "Starting benchmark computations..."
+    
+    main_loop:do iter = 1, n_iter
+        ! write(*, '(A,I0,A,I0)') "Processing iteration ", iter, " of ", n_iter
         
         ! Convert units and calculate derived variables for all points
         do i = 1, n_points
@@ -191,16 +196,17 @@ program benchmark
                         t2m(:, iter), d2m(:, iter), tcc(:, iter), tclw(:, iter), &
                         cdrem(:, iter), taua_slice, asymp_slice, ssalb_slice, &
                         edout, esout, error)
-        
         if (error) then
             write(*, *) "Error in OASIM calculation at iteration ", iter
             stop 1
         end if
         
-    end do
+    end do main_loop
+    ! End the timing 
+    call cpu_time(finish)
 
-    write(*, *) "Benchmark completed successfully!"
-
+    elapsed = finish - start
+    print *, 'Elapsed CPU time (seconds):', elapsed
     ! Clean up
     !---------
     call calc%finalize()
