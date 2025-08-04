@@ -66,7 +66,7 @@ program benchmark
     ! Opening the netcdf file and reading data
     !-----------------------------------------
     call get_environment_variable("HOME", home)
-    FILE_NAME = trim(home)//"/projects/OASIM_ATM/data.nc"
+    FILE_NAME = trim(home)//"/projects/OASIM_ATM/data000.nc"
     call check(nf90_open(FILE_NAME, NF90_NOWRITE, ncid))
     
     ! Reading time variables
