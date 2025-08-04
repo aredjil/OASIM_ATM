@@ -43,7 +43,9 @@ program benchmark
     !------------------
     real(kind=real_kind) :: T, Td, es_Td, es_T
     integer :: i, j, iter
-    
+    ! File path 
+    !----------
+    character(len=256) :: home, FILE_NAME
     ! OASIM objects
     !--------------
     type(oasim_lib) :: lib
@@ -63,7 +65,9 @@ program benchmark
 
     ! Opening the netcdf file and reading data
     !-----------------------------------------
-    call check(nf90_open("/home/aredjil/projects/OASIM_ATM/data000.nc", NF90_NOWRITE, ncid))
+    call get_environment_variable("HOME", home)
+    FILE_NAME = trim(home)//"/projects/OASIM_ATM/data.nc"
+    call check(nf90_open(FILE_NAME, NF90_NOWRITE, ncid))
     
     ! Reading time variables
     call check(nf90_inq_varid(ncid, "iyr", varid))
