@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PROFILING=${1:-OFF}
+
 DEST_DIR=builds/debug_gcc
 
 CURR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -7,4 +9,4 @@ CURR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 rm -rf ${CURR_DIR}/${DEST_DIR}
 mkdir -p ${CURR_DIR}/${DEST_DIR}
 
-cd ${CURR_DIR}/${DEST_DIR} && cmake ../..
+cd ${CURR_DIR}/${DEST_DIR} && cmake ../.. -DENABLE_PROFILING=${PROFILING}

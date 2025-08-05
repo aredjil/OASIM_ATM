@@ -127,7 +127,7 @@ program test
     ,0.89569014,0.89257544,0.88901585]
 
 ! Conversions
-    slp = sp /100.0D0   
+    slp = sp / 100.0D0   
     wsm = ws10        ! m/s
     oz  = tco3
     

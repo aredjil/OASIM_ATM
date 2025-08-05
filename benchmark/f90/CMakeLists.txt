@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
+option(ENABLE_PROFILING "Enable profiling with gprof" OFF)
+if(ENABLE_PROFILING)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -pg")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+endif()
 
 execute_process(COMMAND nf-config --cflags
     OUTPUT_VARIABLE NETCDF_CFLAGS

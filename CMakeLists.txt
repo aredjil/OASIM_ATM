@@ -6,19 +6,27 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Debug)
 endif()
 
+
 set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
+# Set compilation flags depending on the compiler used, currently supports: GNU and Intel compilers.
 if ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
-  add_compile_options(-Wall -Wextra -pedantic)
+  message(STATUS "Using GNU Fortran")
+  # added -pg for profiling in the debug mode only works with gnu compiler 
+  add_compile_options(-Wall -Wextra -pedantic  -pg)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native -fexpensive-optimizations -fomit-frame-pointer -ffast-math")
-elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel")
-  add_compile_options(-warn all)
+  # Added -pg for profiling in debug mode  
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -pg")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pg")
+  elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel")
+  message(STATUS "Using Intel Fortran")
+  add_compile_options(-warn all) 
   set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -xHost -fomit-frame-pointer") # check compatibility with MPI for -fast
   set (CMAKE_Fortran_FLAGS_DEBUG   " -O0 -g -cpp -CB -fp-stack-check -check all -traceback -gen-interfaces -warn interfaces -fpe0 -extend-source")
 endif()
 
 add_subdirectory(OASIMlib)
 add_subdirectory(test)
-add_subdirectory(benchmark)
+add_subdirectory(benchmark) 
 
