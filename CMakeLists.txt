@@ -8,13 +8,20 @@ endif()
 
 
 set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
-
+# Flags for using and checking do concurrent instrinsic 
+set(VECTOR_FLAGS 
+              -ftree-vectorize 
+              -fopt-info-vec 
+              -std=f2008 
+              -cpp
+              )
 set(CMAKE_VERBOSE_MAKEFILE ON)
 # Set compilation flags depending on the compiler used, currently supports: GNU and Intel compilers.
 if ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
   message(STATUS "Using GNU Fortran")
-  # added -pg for profiling in the debug mode only works with gnu compiler 
-  add_compile_options(-Wall -Wextra -pedantic  -pg)
+  # Added -pg for profiling in the debug mode only works with gnu compiler 
+  # NOTE: will add vectorization flags for better peformance 
+  add_compile_options(-Wall -Wextra -pedantic  -pg ${VECTOR_FLAGS})
   set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -march=native -fexpensive-optimizations -fomit-frame-pointer -ffast-math")
   # Added -pg for profiling in debug mode  
   set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -pg")
