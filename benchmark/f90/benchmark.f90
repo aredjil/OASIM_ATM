@@ -13,7 +13,7 @@ program benchmark
     ! Netcdf variables 
     !-----------------
     integer:: ncid, varid, retval
-    ! Dimensions variables 
+    ! Dimensions variables  412300
     !---------------------
     integer, parameter :: n_iter = 300, n_points = 412300, n_waves = 33 
     

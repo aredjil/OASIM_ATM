@@ -61,7 +61,5 @@ contains
                 self%esa(i,:) = 0.0
             end if
         end do
-
-
     end subroutine sfcirr
 end submodule oasim_sfcirr

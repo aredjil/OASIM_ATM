@@ -22,7 +22,7 @@ contains
 
         error = .false.
 
-        do i = 1, self%lib%rows
+        do concurrent (i = 1:self%lib%rows)
             rtra = exp(-thray(i) * rmp)
             if (self%ta(i) < 0.0d0) then
                 self%ta(i) = beta * self%rlamu(i) ** eta
@@ -95,9 +95,9 @@ contains
         a(3) = 0.01527d0 * (ws - 2.2d0) * 0.05d0
         a(3) = max(1.4d-5, a(3))
 
-        do i = 1, 3
+        do concurrent (i = 1:3)
             dndr(i) = 0.0d0
-            do j = 1, 3
+            do concurrent (j = 1:3)
                 rden = frh * ro(j)
                 arg = log(r(i) / rden)
                 arg = arg * arg
@@ -110,7 +110,7 @@ contains
         sumy = 0.0d0
         sumxy = 0.0d0
         sumx2 = 0.0d0
-        do i = 1, 3
+        do concurrent(i = 1:3)
             rlrn = log10(r(i))
             rldndr = log10(dndr(i))
             sumx = sumx + rlrn
