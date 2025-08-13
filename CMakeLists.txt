@@ -31,7 +31,9 @@ if ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "GNU")
   add_compile_options(-warn all) 
   set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -xHost -fomit-frame-pointer") # check compatibility with MPI for -fast
   set (CMAKE_Fortran_FLAGS_DEBUG   " -O0 -g -cpp -CB -fp-stack-check -check all -traceback -gen-interfaces -warn interfaces -fpe0 -extend-source")
-endif()
+  # Added profiling flag  -pg here for the fortran compiler :) 
+  set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -pg")
+  endif()
 
 add_subdirectory(OASIMlib)
 add_subdirectory(test)
