@@ -37,7 +37,7 @@ elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "NVHPC" OR
   message(STATUS "Using NVIDIA NVFortran")
   # Enable OpenACC (you can adjust flags depending on your GPU target)
   set(CMAKE_Fortran_FLAGS_RELEASE "-fast -acc -gpu=ccall")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -acc -Minfo=accel")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-O2 -g -acc -Minfo=accel")
   # Optionally add module output directory
   add_compile_options(-module ${CMAKE_Fortran_MODULE_DIRECTORY})
     set(CMAKE_Fortran_LINK_EXECUTABLE
