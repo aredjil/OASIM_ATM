@@ -27,7 +27,7 @@ contains
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
-        
+        !$acc parallel loop 
         do concurrent (i = 1:self%lib%rows)
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re

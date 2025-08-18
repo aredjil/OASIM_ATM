@@ -110,6 +110,7 @@ contains
         sumy = 0.0d0
         sumxy = 0.0d0
         sumx2 = 0.0d0
+        !$acc parallel loop 
         do concurrent(i = 1:3)
             rlrn = log10(r(i))
             rldndr = log10(dndr(i))
