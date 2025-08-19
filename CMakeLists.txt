@@ -29,7 +29,7 @@ elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "Intel")
   message(STATUS "Using Intel Fortran")
   add_compile_options(-warn all)
   set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -xHost -fomit-frame-pointer")
-  set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -cpp -CB -fp-stack-check -check all -traceback -gen-interfaces -warn interfaces -fpe0 -extend-source")
+  set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -cpp -CB -fp-stack-check -check all -traceback -gen-interfaces -warn interfaces -fpe0 -extend-source")
   set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -pg")
 
 elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "NVHPC" OR
@@ -40,8 +40,6 @@ elseif ("${CMAKE_Fortran_COMPILER_ID}" MATCHES "NVHPC" OR
   set(CMAKE_Fortran_FLAGS_DEBUG   "-O2 -g -acc -Minfo=accel")
   # Optionally add module output directory
   add_compile_options(-module ${CMAKE_Fortran_MODULE_DIRECTORY})
-    set(CMAKE_Fortran_LINK_EXECUTABLE
-      "<CMAKE_Fortran_COMPILER> <FLAGS> <CMAKE_Fortran_LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 else()
   message(WARNING "Unknown Fortran compiler: ${CMAKE_Fortran_COMPILER_ID}")
 endif()
