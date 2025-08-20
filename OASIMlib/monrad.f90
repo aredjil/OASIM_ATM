@@ -16,15 +16,15 @@ contains
         real(kind=real_kind), dimension(: ,:), intent(out) :: edout, esout
         logical, intent(out) :: error
 
-        real(kind=real_kind), parameter :: a3 = 17.502d0 ! dimensionless
-        real(kind=real_kind), parameter :: a4 = 32.19d0  ! Kelvin
-        real(kind=real_kind), parameter :: To = 273.16d0 ! Kelvin
-        real(kind=real_kind), parameter :: b1 = 0.14d0 * 0.01d0 * 611.21d0 ! cm
-        real(kind=real_kind), parameter :: b2 = 0.21d0   ! cm
+        real(kind=real_kind), parameter :: a3 = 17.502e0 ! dimensionless
+        real(kind=real_kind), parameter :: a4 = 32.19e0  ! Kelvin
+        real(kind=real_kind), parameter :: To = 273.16e0 ! Kelvin
+        real(kind=real_kind), parameter :: b1 = 0.14e0 * 0.01e0 * 611.21e0 ! cm
+        real(kind=real_kind), parameter :: b2 = 0.21e0   ! cm
 
         real(kind=real_kind) :: sec_c
 
-        sec_c = (sec_b + sec_e) * 0.5d0
+        sec_c = (sec_b + sec_e) * 0.5e0
 
         error = .true.
 
@@ -52,18 +52,18 @@ contains
         
         self%ed_b = exp(a3 * (d2m - To)/(d2m - a4))
         self%et_b = exp(-a3 * (t2m - To)/(t2m - a4))
-        self%rh_b = 1.0d2 * self%ed_b * self%et_b
+        self%rh_b = 1.0e2 * self%ed_b * self%et_b
         self%wv_b = b1 * self%ed_b * sp / msl + b2
 
 
         call self%sfcsolz(iyr, iday, sec_b, sec_e, points)
         call self%ocalbedo(ws10)
         !!! after debug absorb numerical constant in the subroutine !!!
-        call self%sfcirr(iday, sec_c, 1.0d-2 * sp, ws10, tco3, self%wv_b, self%rh_b, &
-                         taua, asymp, ssalb, tcc, 1.0d3 * tclw, cdrem, error) 
+        call self%sfcirr(iday, sec_c, 1.0e-2 * sp, ws10, tco3, self%wv_b, self%rh_b, &
+                         taua, asymp, ssalb, tcc, 1.0e3 * tclw, cdrem, error) 
 
-        edout = self%eda * (1.0d0 - self%rod)
-        esout = self%esa * (1.0d0 - self%ros)
+        edout = self%eda * (1.0e0 - self%rod)
+        esout = self%esa * (1.0e0 - self%ros)
     end subroutine monrad
 
     module subroutine monrad_debug(self, points, iyr, iday, sec_b, sec_e, slp, wsm, oz, wv, &
@@ -137,8 +137,8 @@ contains
         call self%ocalbedo(wsm)
         call self%sfcirr(iday, sec_c, slp, wsm, oz, wv, rh, taua, asymp, ssalb, ccov, rlwp, cdre, error)
 
-        edout = self%eda * (1.0d0 - self%rod)
-        esout = self%esa * (1.0d0 - self%ros)
+        edout = self%eda * (1.0e0 - self%rod)
+        esout = self%esa * (1.0e0 - self%ros)
     end subroutine monrad_debug
 
     subroutine argument_error(msg1, size1, msg2, size2)
