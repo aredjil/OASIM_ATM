@@ -9,12 +9,12 @@
 
   set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
   # Flags for using and checking do concurrent instrinsic 
-  set(VECTOR_FLAGS 
-                -ftree-vectorize 
-                -fopt-info-vec 
-                -std=f2008 
-                -cpp
-                )
+  # set(VECTOR_FLAGS 
+  #               -ftree-vectorize 
+  #               -fopt-info-vec 
+  #               -std=f2008 
+  #               -cpp
+  #               )
   set(CMAKE_VERBOSE_MAKEFILE ON)
 
   # Detect compiler

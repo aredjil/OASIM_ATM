@@ -7,7 +7,7 @@ program benchmark
     logical :: error
     ! Vriables for timing the main loop 
     !----------------------------
-    real :: start, finish, elapsed
+    ! real :: start, finish, elapsed
     ! netCDF variables section
     !------------------------------------------------------------------------------------ 
     ! Netcdf variables 
@@ -15,7 +15,7 @@ program benchmark
     integer:: ncid, varid, retval
     ! Dimensions variables  412300
     !---------------------
-    integer, parameter :: n_iter = 300, n_points = 412300, n_waves = 33 
+    integer, parameter :: n_iter = 300, n_points = 10, n_waves = 33 
     
     ! Variables to read from NetCDF
     !-------------------
@@ -120,10 +120,10 @@ program benchmark
     ! Close the NetCDF file
     call check(nf90_close(ncid))
 
-    write(*, *) "NetCDF data read successfully"
-    write(*, *) "Number of points: ", n_points
-    write(*, *) "Number of iterations: ", n_iter
-    write(*, *) "Number of wavelengths: ", n_waves
+    ! write(*, *) "NetCDF data read successfully"
+    ! write(*, *) "Number of points: ", n_points
+    ! write(*, *) "Number of iterations: ", n_iter
+    ! write(*, *) "Number of wavelengths: ", n_waves
 
     ! Initialize OASIM library
     !-------------------------
@@ -134,7 +134,7 @@ program benchmark
         stop 1
     end if
 
-    write(*, *) "OASIM library initialized successfully"
+    ! write(*, *) "OASIM library initialized successfully"
 
     ! Allocate working arrays
     !------------------------
@@ -158,7 +158,7 @@ program benchmark
     ! Main computation loop
     !---------------------
     
-    call cpu_time(start) ! Starting the timing 
+    ! call cpu_time(start) ! Starting the timing 
     ! write(*, *) "Starting benchmark computations..."
     
     main_loop:do iter = 1, n_iter
@@ -203,10 +203,10 @@ program benchmark
         
     end do main_loop
     ! End the timing 
-    call cpu_time(finish)
+    ! call cpu_time(finish)
 
-    elapsed = finish - start
-    print *, 'Elapsed CPU time (seconds):', elapsed
+    ! elapsed = finish - start
+    ! print *, 'Elapsed CPU time (seconds):', elapsed
     ! Clean up
     !---------
     call calc%finalize()
