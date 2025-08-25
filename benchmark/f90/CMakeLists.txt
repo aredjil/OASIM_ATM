@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.0)
+
 execute_process(COMMAND nf-config --fflags
     OUTPUT_VARIABLE NETCDF_FFLAGS
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -7,6 +9,13 @@ execute_process(COMMAND nf-config --flibs
 
 separate_arguments(NETCDF_FFLAGS NATIVE_COMMAND ${NETCDF_FFLAGS})
 separate_arguments(NETCDF_FLIBS  NATIVE_COMMAND ${NETCDF_FLIBS})
+
+if(CMAKE_Fortran_COMPILER MATCHES "ifx")
+    message(STATUS "Intel Fortran compiler detected: appending imf")
+    list(APPEND NETCDF_FLIBS imf)
+endif()
+
+
 
 add_library(NetCDF::Fortran INTERFACE IMPORTED)
 target_compile_options(NetCDF::Fortran INTERFACE ${NETCDF_FFLAGS})
