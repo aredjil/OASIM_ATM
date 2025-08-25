@@ -14,6 +14,7 @@ set(NETCDF_FLIBS
     -lnetcdff
     -lnetcdf
     -lnetcdf
+    -limf
     # -lm  <-- removed to test if it fixes the linker
 )
 separate_arguments(NETCDF_FFLAGS NATIVE_COMMAND ${NETCDF_FFLAGS})
