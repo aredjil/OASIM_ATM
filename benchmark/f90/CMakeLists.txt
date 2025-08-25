@@ -11,10 +11,9 @@ separate_arguments(NETCDF_FFLAGS NATIVE_COMMAND ${NETCDF_FFLAGS})
 separate_arguments(NETCDF_FLIBS  NATIVE_COMMAND ${NETCDF_FLIBS})
 
 if(CMAKE_Fortran_COMPILER MATCHES "ifx")
-    message(STATUS "Intel Fortran compiler detected: appending imf")
-    list(APPEND NETCDF_FLIBS imf)
+    list(FILTER NETCDF_FLIBS_RAW EXCLUDE REGEX "^-lm$")
+    list(APPEND NETCDF_FLIBS_RAW imf)
 endif()
-
 
 
 add_library(NetCDF::Fortran INTERFACE IMPORTED)
