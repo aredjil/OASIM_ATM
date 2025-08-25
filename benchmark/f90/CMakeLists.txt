@@ -3,17 +3,21 @@ cmake_minimum_required(VERSION 3.0)
 execute_process(COMMAND nf-config --fflags
     OUTPUT_VARIABLE NETCDF_FFLAGS
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND nf-config --flibs
-    OUTPUT_VARIABLE NETCDF_FLIBS
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+# execute_process(COMMAND nf-config --flibs
+#     OUTPUT_VARIABLE NETCDF_FLIBS
+#     OUTPUT_STRIP_TRAILING_WHITESPACE)
+cmake_minimum_required(VERSION 3.0)
 
+# Hard-coded NetCDF Fortran libraries (without -lm)
+set(NETCDF_FLIBS
+    -L/leonardo/prod/spack/06/install/0.22/linux-rhel8-icelake/oneapi-2024.1.0/netcdf-fortran-4.6.1-gtz562rmr2nk57j7w2g32oniq4xokxak/lib
+    -lnetcdff
+    -lnetcdf
+    -lnetcdf
+    # -lm  <-- removed to test if it fixes the linker
+)
 separate_arguments(NETCDF_FFLAGS NATIVE_COMMAND ${NETCDF_FFLAGS})
-separate_arguments(NETCDF_FLIBS  NATIVE_COMMAND ${NETCDF_FLIBS})
-
-if(CMAKE_Fortran_COMPILER MATCHES "ifx")
-    list(FILTER NETCDF_FLIBS_RAW EXCLUDE REGEX "^-lm$")
-    list(APPEND NETCDF_FLIBS_RAW imf)
-endif()
+# separate_arguments(NETCDF_FLIBS  NATIVE_COMMAND ${NETCDF_FLIBS})
 
 
 add_library(NetCDF::Fortran INTERFACE IMPORTED)
