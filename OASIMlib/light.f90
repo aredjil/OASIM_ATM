@@ -22,53 +22,72 @@ contains
         real(kind=real_kind), dimension(:), pointer :: fobar, oza, awv, ao, aco2
         integer :: i
 
+        real(kind=real_kind), dimension(2) :: tdb_tdir
+        real(kind=real_kind), dimension(self%lib%rows) :: input
+        
+        real(kind=real_kind), dimension(3, self%lib%rows):: input_2
+
+
         fobar => self%lib%atmo_adapted%tab(:,1)
         oza => self%lib%atmo_adapted%tab(:,3)
         awv => self%lib%atmo_adapted%tab(:,4)
         ao => self%lib%atmo_adapted%tab(:,5)
         aco2 => self%lib%atmo_adapted%tab(:,6)
 
-        if (pres < 0.0d0 .or. ws < 0.0d0 .or. relhum < 0.0d0 &
-        .or. ozone < 0.0d0 .or. wvapor < 0.0d0) then
+        if (pres < 0.0e0 .or. ws < 0.0e0 .or. relhum < 0.0e0 &
+        .or. ozone < 0.0e0 .or. wvapor < 0.0e0) then
             self%ed = 0
             self%es = 0
         end if
 
-        rtmp = (93.885d0 - sunz) ** (-1.253d0)
-        rmu0 = cosunz + 0.15d0 * rtmp
-        rm = 1.0d0 / rmu0
-        otmp = (cosunz * cosunz + ozfac1) ** 0.5d0
+        rtmp = (93.885e0 - sunz) ** (-1.253e0)
+        rmu0 = cosunz + 0.15e0 * rtmp
+        rm = 1.0e0 / rmu0
+        otmp = (cosunz * cosunz + ozfac1) ** 0.5e0
         rmo = ozfac2 / otmp
 
         rmp = pres / p0 * rm
+        
         !$acc parallel loop 
         do concurrent (i = 1:self%lib%rows)
-            to = oza(i) * ozone * 1.0d-3
+            to = oza(i) * ozone * 1.0e-3
             oarg = -to * rmo
 
             ag = ao(i) + aco2(i)
-            gtmp = (1.0d0 + 118.3d0 * ag * rmp) ** 0.45d0
-            gtmp2 = -1.41d0 * ag * rmp
+            gtmp = (1.0e0 + 118.3e0 * ag * rmp) ** 0.45e0
+            gtmp2 = -1.41e0 * ag * rmp
             garg = gtmp2 / gtmp
 
-            wtmp = (1.0d0 + 20.07d0 * awv(i) * wvapor * rm) ** 0.45d0
-            wtmp2 = -0.2385d0 * awv(i) * wvapor * rm
+            wtmp = (1.0e0 + 20.07e0 * awv(i) * wvapor * rm) ** 0.45e0
+            wtmp2 = -0.2385e0 * awv(i) * wvapor * rm
             warg = wtmp2 / wtmp
             self%tgas(i) = exp(oarg + garg + warg)
         end do
-
-        call self%clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, error)
+        ! Here I think I should pass the attributes as arguments 
+        ! to the ctrans function ? 
+        input_2 = self%clrtrans(cosunz, rm, rmp, ws, relhum, am, vi)
+        ! Then return the ouputs and assign them to their respective 
+        ! Attributes td, ts and ta 
+        self%td = input_2(1, :)
+        self%ts = input_2(3, :)
+        self%ta = input_2(3, :)
 
         self%edclr = daycor * cosunz * fobar * self%tgas * self%td
         self%esclr = daycor * cosunz * fobar * self%tgas * self%ts
 
-        call self%slingo(rmu0, clwp, re)
+        ! tdb_tdir here contain tdb and tdir 
+        tdb_tdir = self%slingo(rmu0, clwp, re)
+
+
+        self%tcd = tdb_tdir(1)
+        self%tcs = tdb_tdir(2)        
 
         self%edcld = daycor * cosunz * fobar * self%tgas * self%tcd
         self%escld = daycor * cosunz * fobar * self%tgas * self%tcs
 
-        ccov1 = cov * 1.0d-2
-        self%ed = (1.0d0 - ccov1) * self%edclr + ccov1 * self%edcld
-        self%es = (1.0d0 - ccov1) * self%esclr + ccov1 * self%escld
+        ccov1 = cov * 1.0e-2
+        ! The retun values of the light submodule ? 
+        self%ed = (1.0e0 - ccov1) * self%edclr + ccov1 * self%edcld
+        self%es = (1.0e0 - ccov1) * self%esclr + ccov1 * self%escld
     end subroutine light
 end submodule

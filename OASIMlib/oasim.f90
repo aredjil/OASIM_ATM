@@ -40,8 +40,8 @@ module oasim
 
             procedure, public :: monrad
             procedure, public :: monrad_debug
-            procedure :: slingo
-            procedure :: clrtrans
+            procedure :: slingo => slingo_fn
+            procedure :: clrtrans => clrtrans_fn 
             procedure :: light
             procedure :: ocalbedo
             procedure :: sunmod
@@ -60,18 +60,19 @@ module oasim
         real(kind=real_kind), parameter :: rad_1 = pi / 180.0d0 
 
         interface
-            module subroutine slingo(self, rmu0, clwp, cre)   
-                use :: oasim_common, only: real_kind    
-                class(calc_unit) :: self
+            pure module function slingo_fn(self, rmu0, clwp, cre) result(out)
+                class(calc_unit), intent(in) :: self
                 real(kind=real_kind), intent(in) :: rmu0, clwp, cre
-            end subroutine slingo
+                real(kind=real_kind), dimension(2) :: out
+            end function slingo_fn
 
-            module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
+            pure module function clrtrans_fn(self, cosunz, rm, rmp, ws, relhum, am, vi)
                 use :: oasim_common, only: real_kind 
-                class(calc_unit) :: self
+                class(calc_unit), intent(in) :: self
                 real(kind=real_kind), intent(in) :: cosunz, rm, rmp, ws, relhum, am, vi
-                logical, intent(out) :: error
-            end subroutine clrtrans
+                ! logical, intent(out) :: error
+                real(kind=real_kind), dimension(3, self%lib%rows):: out 
+            end function clrtrans_fn 
 
             module subroutine light(self, sunz, cosunz, daycor, pres, ws, ozone, wvapor, &
                 relhum, am, vi, cov, clwp, re, error)
@@ -236,11 +237,11 @@ contains
             end if
             self%up(:,3) = sin(self%lat * rad_1)
     
-            upxy_1 = 1.0d0 / sqrt(self%up(:,1) * self%up(:,1) &
+            upxy_1 = 1.0e0 / sqrt(self%up(:,1) * self%up(:,1) &
                             + self%up(:,2) * self%up(:,2))
             self%ea(:,1) = - self%up(:,2) * upxy_1
             self%ea(:,2) = self%up(:,1) * upxy_1
-            self%ea(:,3) = 0.0d0
+            self%ea(:,3) = 0.0e0
             self%no(:,1) = - self%up(:,3) * self%ea(:,2)
             self%no(:,2) = self%up(:,3) * self%ea(:,1)
             self%no(:,3) = self%up(:,1) * self%ea(:,2) &
@@ -260,14 +261,14 @@ contains
             real(kind=real_kind) :: rlam, t, tlog, fac
             real(kind=real_kind), dimension(:), pointer :: aw, bw
 
-            real(kind=real_kind), parameter :: a0 = 0.9976d0
-            real(kind=real_kind), parameter :: a1 = 0.2194d0
-            real(kind=real_kind), parameter :: a2 = 5.554d-2
-            real(kind=real_kind), parameter :: a3 = 6.7d-3
-            real(kind=real_kind), parameter :: b0 = 5.026d0
-            real(kind=real_kind), parameter :: b1 = -1.138d-2
-            real(kind=real_kind), parameter :: b2 = 9.552d-6
-            real(kind=real_kind), parameter :: b3 = -2.698d-9            
+            real(kind=real_kind), parameter :: a0 = 0.9976e0
+            real(kind=real_kind), parameter :: a1 = 0.2194e0
+            real(kind=real_kind), parameter :: a2 = 5.554e-2
+            real(kind=real_kind), parameter :: a3 = 6.7e-3
+            real(kind=real_kind), parameter :: b0 = 5.026e0
+            real(kind=real_kind), parameter :: b1 = -1.138e-2
+            real(kind=real_kind), parameter :: b2 = 9.552e-6
+            real(kind=real_kind), parameter :: b3 = -2.698e-9            
 
             calc%lib => lib            
             rows = lib%rows
@@ -314,20 +315,20 @@ contains
             calc%td = 0.0
             calc%ts = 0.0
             do i = 1, rows
-                calc%rlamu(i) = (lib%atmo_adapted%get_low(i) + lib%atmo_adapted%get_high(i)) * 0.5d-3
+                calc%rlamu(i) = (lib%atmo_adapted%get_low(i) + lib%atmo_adapted%get_high(i)) * 0.5e-3
             end do
 
             do i = 1, rows
                 rlam = (lib%atmo_adapted%get_low(i) + lib%atmo_adapted%get_high(i)) * 0.5
                 if (rlam < 900.0) then
                     t = exp(-(aw(i) + 0.5 * bw(i)))
-                    tlog = log(1.0d-36 + t)
+                    tlog = log(1.0e-36 + t)
                     fac = a0 + a1 * tlog + a2 * tlog * tlog + a3 * tlog * tlog * tlog
-                    calc%wfac(i) = min(fac, 1.0d0)
-                    calc%wfac(i) = max(fac, 0.0d0)
+                    calc%wfac(i) = min(fac, 1.0e0)
+                    calc%wfac(i) = max(fac, 0.0e0)
                 else
                     fac = b0 + b1 * rlam + b2 * rlam * rlam + b3 * rlam * rlam * rlam
-                    calc%wfac(i) = max(fac, 0.0d0)
+                    calc%wfac(i) = max(fac, 0.0e0)
                 end if
             end do
         end function init_calc

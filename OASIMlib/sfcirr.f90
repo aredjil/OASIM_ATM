@@ -14,24 +14,24 @@ contains
         real(kind=real_kind), dimension(:), intent(in) :: ccov, rlwp, cdre
         logical, intent(out) :: error
 
-        real(kind=real_kind), parameter :: daypersec = 1.0d0 / 86400.0d0
+        real(kind=real_kind), parameter :: daypersec = 1.0e0 / 86400.0e0
 
         real(kind=real_kind) :: rday, daycor, sunz, cosunz, pres, ws, ozone, wvapor, relhum
         real(kind=real_kind) :: cov, clwp, re !, sirr
         integer :: i !, j
 
-        self%eda = 0.0d0
-        self%esa = 0.0d0
+        self%eda = 0.0e0
+        self%esa = 0.0e0
 
         rday = real(iday, real_kind) + sec_c * daypersec
-        daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
+        daycor = 1.0 + 1.67e-2 * cos(pi2 * (rday - 3.0e0) / 365.0e0)
         daycor = daycor * daycor
         !$acc parallel loop 
         do i = 1, self%p_size
             cosunz = cos(self%solz(i) * rad_1)
             sunz = self%solz(i)
 
-            if (sunz < 90.0d0) then
+            if (sunz < 90.0e0) then
                 pres = slp(i)
                 ws = wsm(i)
                 ozone = oz(i)

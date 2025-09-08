@@ -18,7 +18,7 @@ contains
 
         call sun2000(iyr, iday, sec, suni, rs)
 
-        day = float(iday) + sec / 86400.0d0
+        day = float(iday) + sec / 86400.0e0
         call gha2000(iyr, day, gha)
         ghar = gha * rad_1
 
@@ -42,7 +42,7 @@ contains
         real(kind=real_kind), dimension(3), intent(out) :: sunvec
         real(kind=real_kind), intent(out) :: rs
 
-        real(kind=real_kind), parameter :: xk = 5.6932d-3
+        real(kind=real_kind), parameter :: xk = 5.6932e-3
 
         integer :: imon, nt, nutime
         real(kind=real_kind) :: rjd, t, xls, gs, xlm, omega, dpsi, eps 
@@ -52,7 +52,7 @@ contains
         nutime = -99999
 
         rjd = float(jd(iyr, imon, iday))
-        t = rjd - 2451545.0d0 + (sec - 43200.0d0) / 86400.0d0
+        t = rjd - 2451545.0e0 + (sec - 43200.0e0) / 86400.0e0
 
         call ephparms(t, xls, gs, xlm, omega)
         nt = int(t)
@@ -61,31 +61,31 @@ contains
             call nutate(t, xls, gs, xlm, omega, dpsi, eps)
         end if
 
-        g2 = 50.40828d0 + 1.60213022d0 * t
-        g2 = mod(g2, 360.0d0)
+        g2 = 50.40828e0 + 1.60213022e0 * t
+        g2 = mod(g2, 360.0e0)
 
-        g4 = 19.38816d0 + 0.52402078d0 * t
-        g4 = mod(g4, 360.0d0)
+        g4 = 19.38816e0 + 0.52402078e0 * t
+        g4 = mod(g4, 360.0e0)
         
-        g5 = 20.35116d0 + 0.08309121d0 * t
-        g5 = mod(g5, 360.0d0)
+        g5 = 20.35116e0 + 0.08309121e0 * t
+        g5 = mod(g5, 360.0e0)
 
-        rs = +1.00014d0 - 0.01671d0 * cos(gs * rad_1) & 
-             -0.00014d0 * cos(2.0d0 * gs * rad_1)
+        rs = +1.00014e0 - 0.01671e0 * cos(gs * rad_1) & 
+             -0.00014e0 * cos(2.0e0 * gs * rad_1)
 
-        dls = (6893.0d0 - 4.6543463d-4 * t) * sin(gs * rad_1) &
-              +  72.0d0 * sin(2.0d0 * gs * rad_1) &
-              -   7.0d0 * cos((gs - g5) * rad_1) &
-              +   6.0d0 * sin((xlm - xls) * rad_1) &
-              +   5.0d0 * sin((4.0d0 * gs - 8.0d0 * g4 + 3.0d0 * g5) * rad_1) &
-              -   5.0d0 * cos((2.0d0 * gs - 2.0d0 * g2) * rad_1) &
-              -   4.0d0 * sin((gs - g2) * rad_1) &
-              +   4.0d0 * cos((4.0d0 * gs - 8.0d0 * g4 + 3.0d0 * g5) * rad_1) &
-              +   3.0d0 * sin((2.0d0 * gs - 2.0d0 * g2) * rad_1) &
-              -   3.0d0 * sin(g5 * rad_1) &
-              -   3.0d0 * sin((2.0d0 * gs - 2.0d0 * g5) * rad_1)
+        dls = (6893.0e0 - 4.6543463e-4 * t) * sin(gs * rad_1) &
+              +  72.0e0 * sin(2.0e0 * gs * rad_1) &
+              -   7.0e0 * cos((gs - g5) * rad_1) &
+              +   6.0e0 * sin((xlm - xls) * rad_1) &
+              +   5.0e0 * sin((4.0e0 * gs - 8.0e0 * g4 + 3.0e0 * g5) * rad_1) &
+              -   5.0e0 * cos((2.0e0 * gs - 2.0e0 * g2) * rad_1) &
+              -   4.0e0 * sin((gs - g2) * rad_1) &
+              +   4.0e0 * cos((4.0e0 * gs - 8.0e0 * g4 + 3.0e0 * g5) * rad_1) &
+              +   3.0e0 * sin((2.0e0 * gs - 2.0e0 * g2) * rad_1) &
+              -   3.0e0 * sin(g5 * rad_1) &
+              -   3.0e0 * sin((2.0e0 * gs - 2.0e0 * g5) * rad_1)
               
-        xlsg = xls + dls / 3600.0d0
+        xlsg = xls + dls / 3600.0e0
         xlsa = xlsg + dpsi - xk / rs
 
         sunvec(1) = cos(xlsa * rad_1)
@@ -110,9 +110,9 @@ contains
         iday = int(day)
         fday = day - iday
         jday = jd(iyr, imon, iday)
-        t = jday - 2451545.5d0 + fday
+        t = jday - 2451545.5e0 + fday
 
-        gmst = 100.4606184d0 + 0.9856473663d0 * t + 2.908d-13 * t * t
+        gmst = 100.4606184e0 + 0.9856473663e0 * t + 2.908e-13 * t * t
 
         nt = int(t)
         if (nt /= nutime) then
@@ -121,9 +121,9 @@ contains
             call nutate(t, xls, gs, xlm, omega, dpsi, eps)
         end if
 
-        gha = gmst + dpsi * cos(eps * rad_1) + fday * 360.0d0
-        gha = mod(gha, 360.0d0)
-        if (gha < 0.0d0) gha = gha + 360.0d0
+        gha = gmst + dpsi * cos(eps * rad_1) + fday * 360.0e0
+        gha = mod(gha, 360.0e0)
+        if (gha < 0.0e0) gha = gha + 360.0e0
     end subroutine gha2000
 
     pure integer function jd(y, m, d)
@@ -140,17 +140,17 @@ contains
         real(kind=real_kind), intent(in) :: t
         real(kind=real_kind), intent(out) :: xls, gs, xlm, omega
 
-        xls = 280.46592d0 + 0.9856473516d0 * t
-        xls = mod(xls, 360.0d0)
+        xls = 280.46592e0 + 0.9856473516e0 * t
+        xls = mod(xls, 360.0e0)
 
-        gs = 357.52772d0 + 0.9856002831d0 * t
-        gs = mod(gs, 360.0d0)
+        gs = 357.52772e0 + 0.9856002831e0 * t
+        gs = mod(gs, 360.0e0)
         
-        xlm = 218.31643d0 + 13.17639648d0 * t 
-        xlm = mod(xlm, 360.0d0)
+        xlm = 218.31643e0 + 13.17639648e0 * t 
+        xlm = mod(xlm, 360.0e0)
         
-        omega = 125.04452d0 - 0.0529537648d0 * t 
-        omega = mod(omega, 360.0d0)        
+        omega = 125.04452e0 - 0.0529537648e0 * t 
+        omega = mod(omega, 360.0e0)        
     end subroutine ephparms
 
     subroutine nutate(t, xls, gs, xlm, omega, dpsi, eps)
@@ -161,15 +161,15 @@ contains
 
         real(kind=real_kind) :: epsm, deps
 
-        dpsi = -17.1996d0 * sin(omega * rad_1) &
-               +0.2062d0 * sin(2.0d0 * omega * rad_1) &
-               -1.3187d0 * sin(2.0d0 * xls * rad_1) &
-               +0.1426d0 * sin(gs * rad_1) &
-               -0.2274d0 * sin(2.0d0 * xlm * rad_1)
+        dpsi = -17.1996e0 * sin(omega * rad_1) &
+               +0.2062e0 * sin(2.0d0 * omega * rad_1) &
+               -1.3187e0 * sin(2.0d0 * xls * rad_1) &
+               +0.1426e0 * sin(gs * rad_1) &
+               -0.2274e0 * sin(2.0d0 * xlm * rad_1)
 
-        epsm = 23.439291d0 - 3.560d-7 * t
-        deps = 9.2025d0 * cos(omega * rad_1) + 0.5736d0 * cos(2.0d0 * xls * rad_1)
-        eps = epsm + deps / 3600.0d0
-        dpsi = dpsi / 3600.0d0
+        epsm = 23.439291e0 - 3.560e-7 * t
+        deps = 9.2025e0 * cos(omega * rad_1) + 0.5736d0 * cos(2.0e0 * xls * rad_1)
+        eps = epsm + deps / 3600.0e0
+        dpsi = dpsi / 3600.0e0
     end subroutine nutate
 end submodule oasim_submod
