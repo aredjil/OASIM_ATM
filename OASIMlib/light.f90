@@ -20,7 +20,12 @@ contains
         real(kind=real_kind) :: rtmp, rmu0, rm, otmp, rmo, rmp, to, oarg, ag
         real(kind=real_kind) :: gtmp, gtmp2, garg, wtmp, wtmp2, warg, ccov1
         real(kind=real_kind), dimension(:), pointer :: fobar, oza, awv, ao, aco2
+        type(light_return):: input 
         integer :: i
+
+        allocate(input%tcd(self%lib%rows))
+        allocate(input%tcs(self%lib%rows))
+
 
         fobar => self%lib%atmo_adapted%tab(:,1)
         oza => self%lib%atmo_adapted%tab(:,3)
@@ -62,10 +67,11 @@ contains
         self%edclr = daycor * cosunz * fobar * self%tgas * self%td
         self%esclr = daycor * cosunz * fobar * self%tgas * self%ts
 
-        call self%slingo(rmu0, clwp, re)
+        input = self%slingo(rmu0, clwp, re)
+        
 
-        self%edcld = daycor * cosunz * fobar * self%tgas * self%tcd
-        self%escld = daycor * cosunz * fobar * self%tgas * self%tcs
+        self%edcld = daycor * cosunz * fobar * self%tgas * input%tcd
+        self%escld = daycor * cosunz * fobar * self%tgas * input%tcs
 
         ccov1 = cov * 1.0d-2
         self%ed = (1.0d0 - ccov1) * self%edclr + ccov1 * self%edcld

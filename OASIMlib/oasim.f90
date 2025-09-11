@@ -1,7 +1,7 @@
 module oasim
         use :: configuration
         use :: tables
-        use :: oasim_common, only: real_kind, string_length
+        use :: oasim_common, only: real_kind, string_length, light_return
 
         implicit none
 
@@ -60,11 +60,12 @@ module oasim
         real(kind=real_kind), parameter :: rad_1 = pi / 180.0d0 
 
         interface
-            module subroutine slingo(self, rmu0, clwp, cre)   
-                use :: oasim_common, only: real_kind    
-                class(calc_unit) :: self
+            pure module function slingo(self, rmu0, clwp, cre)  result(res)  
+                use :: oasim_common, only: real_kind, light_return    
+                class(calc_unit), intent(in) :: self
                 real(kind=real_kind), intent(in) :: rmu0, clwp, cre
-            end subroutine slingo
+                type(light_return):: res
+            end function slingo
 
             module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
                 use :: oasim_common, only: real_kind 
@@ -75,7 +76,7 @@ module oasim
 
             module subroutine light(self, sunz, cosunz, daycor, pres, ws, ozone, wvapor, &
                 relhum, am, vi, cov, clwp, re, error)
-                use :: oasim_common, only: real_kind
+                use :: oasim_common, only: real_kind, light_return
                 class(calc_unit) :: self
                 real(kind=real_kind), intent(in) :: sunz, cosunz, daycor, pres, ws, ozone
                 real(kind=real_kind), intent(in) :: wvapor, relhum, am, vi, cov, clwp, re              

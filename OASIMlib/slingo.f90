@@ -1,29 +1,37 @@
 submodule (oasim) oasim_slingo
+    use::oasim_common, only: light_return
     implicit none
 
 contains
-    module subroutine slingo(self, rmu0, clwp, cre)  
-    !!! lib vars: tcd, tcs
+    pure module function slingo(self, rmu0, clwp, cre) result(res)
+    !!! lib vars: tcd, tcsz
         implicit none
         
-        class(calc_unit) :: self
+        class(calc_unit), intent(in) :: self
         real(kind=real_kind), intent(in) :: rmu0, clwp, cre
 
         real(kind=real_kind) :: re, tauc, oneomega, omega, g, b0, bmu0, f, u2, sqarg
         real(kind=real_kind) :: eps, rm, e, val1, val2, val3, rnum, rden, gama1, gama2
         real(kind=real_kind) :: tdb, rdif, tdif, tdir
         real(kind=real_kind), dimension(4) :: alpha
-        real(kind=real_kind), dimension(:), pointer :: asl, bsl, csl, dsl, esl, fsl
+        real(kind=real_kind), dimension(self%lib%rows) :: asl, bsl, csl, dsl, esl, fsl
         real(kind=real_kind), parameter :: const_3f7 = 3.0 / 7.0
         real(kind=real_kind), parameter :: const_7f4 = 7.0 / 4.0
+        type(light_return):: res 
         integer :: i
 
-        asl => self%lib%slingo_adapted%tab(:,1)
-        bsl => self%lib%slingo_adapted%tab(:,2)
-        csl => self%lib%slingo_adapted%tab(:,5)
-        dsl => self%lib%slingo_adapted%tab(:,6)
-        esl => self%lib%slingo_adapted%tab(:,3)
-        fsl => self%lib%slingo_adapted%tab(:,4)
+        ! Allocating the results 
+        allocate(res%tcd(self%lib%rows))
+        allocate(res%tcs(self%lib%rows))
+
+
+
+        asl = self%lib%slingo_adapted%tab(:,1)
+        bsl = self%lib%slingo_adapted%tab(:,2)
+        csl = self%lib%slingo_adapted%tab(:,5)
+        dsl = self%lib%slingo_adapted%tab(:,6)
+        esl = self%lib%slingo_adapted%tab(:,3)
+        fsl = self%lib%slingo_adapted%tab(:,4)
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
@@ -59,8 +67,11 @@ contains
             rdif = rm * (1.0d0 - E * E) / (val3 + 1.0d-9)
             tdif = E * (1.0d0 - rm * rm) / (val3 + 1.0d-9)
             tdir = -gama2 * tdif - gama1 * tdb * rdif + gama2 * tdb
-            self%tcd(i) = tdb
-            self%tcs(i) = tdir
+            ! self%tcd(i) = tdb
+            ! self%tcs(i) = tdir
+
+            res%tcd(i) = tdb 
+            res%tcs(i) = tdir
         end do
-    end subroutine slingo
+    end function slingo
 end submodule oasim_slingo
