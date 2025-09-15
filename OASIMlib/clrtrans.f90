@@ -3,6 +3,7 @@ submodule (oasim) oasim_clrtrans
     implicit none
 
 contains
+    !$acc routine seq
     module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
     !!! lib vars: ta, wa, asym, td, ts, rlamu
         implicit none
@@ -21,7 +22,7 @@ contains
         call navaer(relhum, am, vi, ws, beta, eta, wa1, afs, bfs)
 
         error = .false.
-
+        !$acc parallel loop
         do i = 1, self%lib%rows
             rtra = exp(-thray(i) * rmp)
             if (self%ta(i) < 0.0d0) then
@@ -67,7 +68,7 @@ contains
         end do
 
     end subroutine clrtrans
-
+    !$acc routine seq
     subroutine navaer(relhum, am, vi, ws, beta, eta, wa, afs, bfs)
         implicit none
 
@@ -94,7 +95,7 @@ contains
         a(2) = max(0.5d0, a(2))
         a(3) = 0.01527d0 * (ws - 2.2d0) * 0.05d0
         a(3) = max(1.4d-5, a(3))
-
+        !$acc loop
         do i = 1, 3
             dndr(i) = 0.0d0
             do j = 1, 3

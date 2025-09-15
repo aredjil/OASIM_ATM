@@ -2,6 +2,7 @@ submodule (oasim) oasim_light
     implicit none
 
 contains
+    !$acc routine seq
     module subroutine light(self, sunz, cosunz, daycor, pres, ws, ozone, wvapor, &
         relhum, am, vi, cov, clwp, re, error)
         !!! lib vars: td, ts, tcd, tcs, ed, es, tgas
@@ -41,7 +42,7 @@ contains
         rmo = ozfac2 / otmp
 
         rmp = pres / p0 * rm
-
+        !$acc parallel loop
         do i = 1, self%lib%rows
             to = oza(i) * ozone * 1.0d-3
             oarg = -to * rmo

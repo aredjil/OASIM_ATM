@@ -26,7 +26,7 @@ contains
         rday = real(iday, real_kind) + sec_c * daypersec
         daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
         daycor = daycor * daycor
-
+        !$acc parallel loop
         do i = 1, self%p_size
             cosunz = cos(self%solz(i) * rad_1)
             sunz = self%solz(i)
