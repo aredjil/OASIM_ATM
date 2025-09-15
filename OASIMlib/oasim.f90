@@ -96,7 +96,7 @@ module oasim
                 integer, dimension(:), intent(in) :: points
                 real(kind=real_kind), intent(out) :: rs
             end subroutine sunmod
-
+            !$acc routine seq
             module subroutine sfcirr(self, iday, sec_c, slp, wsm, oz, wv, rh, &
                 taua, asymp, ssalb, ccov, rlwp, cdre, error)
                 use :: oasim_common, only: real_kind     

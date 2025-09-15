@@ -4,6 +4,7 @@ submodule (oasim) oasim_sfcirr
 contains
     module subroutine sfcirr(self, iday, sec_c, slp, wsm, oz, wv, rh, &
          taua, asymp, ssalb, ccov, rlwp, cdre, error)
+         use omp_lib 
         implicit none
 
         class(calc_unit) :: self
@@ -18,7 +19,10 @@ contains
 
         real(kind=real_kind) :: rday, daycor, sunz, cosunz, pres, ws, ozone, wvapor, relhum
         real(kind=real_kind) :: cov, clwp, re !, sirr
+        real(kind=real_kind):: am, vi
         integer :: i !, j
+        am = self%lib%init_parameters%am
+        vi = self%lib%init_parameters%vi
 
         self%eda = 0.0d0
         self%esa = 0.0d0
@@ -26,7 +30,7 @@ contains
         rday = real(iday, real_kind) + sec_c * daypersec
         daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
         daycor = daycor * daycor
-        !$acc parallel loop
+        !$omp parallel do default(shared) private(i,cosunz,sunz,pres,ws,ozone,wvapor,relhum,cov,clwp,re) schedule(dynamic)
         do i = 1, self%p_size
             cosunz = cos(self%solz(i) * rad_1)
             sunz = self%solz(i)
@@ -47,7 +51,7 @@ contains
                 re = cdre(i)
 
                 call self%light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
-                                self%lib%init_parameters%am, self%lib%init_parameters%vi, &
+                                am, vi, &
                                 cov, clwp, re, error)
 
                 ! sirr = 0.0
@@ -61,7 +65,6 @@ contains
                 self%esa(i,:) = 0.0
             end if
         end do
-
-
+        !$omp end parallel do
     end subroutine sfcirr
 end submodule oasim_sfcirr
