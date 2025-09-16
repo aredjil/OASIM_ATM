@@ -3,7 +3,7 @@ submodule (oasim) oasim_clrtrans
     implicit none
 
 contains
-    !$acc routine seq
+    !$acc routine (clrtrans) seq
     module subroutine clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
                                          rows, thray, ta, wa, asym, rlamu, td, ts, error)
     !!! Standalone version - all variables passed as parameters
@@ -29,7 +29,6 @@ contains
         call navaer(relhum, am, vi, ws, beta, eta, wa1, afs, bfs)
 
         error = .false.
-        !$acc parallel loop default(present) private(i, rtra, omegaa, alg, afs, bfs, fa, tarm, atra, taa, tas, dray, daer)
         do i = 1, rows
             rtra = exp(-thray(i) * rmp)
             if (ta(i) < 0.0d0) then
@@ -73,10 +72,9 @@ contains
             daer = rtra ** 1.5d0 * taa * fa * (1.0d0 - tas)
             ts(i) = dray + daer
         end do
-        !$acc end parallel loop
     end subroutine clrtrans
 
-    !$acc routine seq
+    !$acc routine (navaer) seq
     subroutine navaer(relhum, am, vi, ws, beta, eta, wa, afs, bfs)
         implicit none
 
@@ -104,10 +102,8 @@ contains
         a(3) = 0.01527d0 * (ws - 2.2d0) * 0.05d0
         a(3) = max(1.4d-5, a(3))
         
-        !$acc loop seq
         do i = 1, 3
             dndr(i) = 0.0d0
-            !$acc loop seq
             do j = 1, 3
                 rden = frh * ro(j)
                 arg = log(r(i) / rden)
@@ -121,7 +117,6 @@ contains
         sumy = 0.0d0
         sumxy = 0.0d0
         sumx2 = 0.0d0
-        !$acc loop seq
         do i = 1, 3
             rlrn = log10(r(i))
             rldndr = log10(dndr(i))

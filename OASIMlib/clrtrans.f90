@@ -3,7 +3,7 @@ submodule (oasim) oasim_clrtrans
     implicit none
 
 contains
-    !$omp declare target
+    !$acc routine (clrtrans) seq
     module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
     !!! lib vars: ta, wa, asym, td, ts, rlamu
         implicit none
@@ -66,7 +66,6 @@ contains
             daer = rtra ** 1.5d0 * taa * fa * (1.0d0 - tas)
             self%ts(i) = dray + daer
         end do
-    !$omp end parallel do
     end subroutine clrtrans
     !$omp end declare target
     !$omp declare target

@@ -2,7 +2,7 @@ submodule (oasim) oasim_slingo
     implicit none
 
 contains
-    !$acc routine seq
+    !$acc routine (slingo) seq
     module subroutine slingo(self, rmu0, clwp, cre)  
     !!! lib vars: tcd, tcs
         implicit none
@@ -28,7 +28,7 @@ contains
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
-        !$omp parallel do default(shared) private(i, tauc, oneomega, omega, g, b0, bmu0, f, u2, sqarg, eps, rm, e, val1, val2, rnum, rden, gama1, gama2, tdb, rdif, tdif, tdir, alpha)
+
         do i = 1, self%lib%rows
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re
@@ -63,6 +63,5 @@ contains
             self%tcd(i) = tdb
             self%tcs(i) = tdir
         end do
-        !$omp end parallel do
     end subroutine slingo
 end submodule oasim_slingo

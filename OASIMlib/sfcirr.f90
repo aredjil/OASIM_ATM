@@ -1,4 +1,5 @@
 submodule (oasim) oasim_sfcirr
+    use oasim_device, only: light, clrtrans, slingo
     implicit none
 
 contains
@@ -29,7 +30,7 @@ contains
         rday = real(iday, real_kind) + sec_c * daypersec
         daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
         daycor = daycor * daycor
-
+        !$acc parallel loop gang vector present(self, slp, wsm, oz, wv, rh, taua, asymp, ssalb, ccov, rlwp, cdre)
         do i = 1, self%p_size
             cosunz = cos(self%solz(i) * rad_1)
             sunz = self%solz(i)
@@ -81,5 +82,6 @@ contains
                 self%esa(i,:) = 0.0
             end if
         end do
+        !$acc end parallel loop
     end subroutine sfcirr
 end submodule oasim_sfcirr
