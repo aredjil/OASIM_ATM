@@ -41,7 +41,7 @@ contains
         rmo = ozfac2 / otmp
 
         rmp = pres / p0 * rm
-        !$omp parallel do default(shared) private(i,to,oarg,ag,gtmp,gtmp2,garg,wtmp,wtmp2,warg)
+
         do i = 1, self%lib%rows
             to = oza(i) * ozone * 1.0d-3
             oarg = -to * rmo
@@ -56,13 +56,25 @@ contains
             warg = wtmp2 / wtmp
             self%tgas(i) = exp(oarg + garg + warg)
         end do
-        !$omp end parallel do
-        call self%clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, error)
-
+        ! call self%clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, error)
+        call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
+             self%lib%rows, &
+             self%lib%atmo_adapted%tab(:,2), &
+             self%ta, self%wa, self%asym, self%rlamu, &
+             self%td, self%ts, error)
         self%edclr = daycor * cosunz * fobar * self%tgas * self%td
         self%esclr = daycor * cosunz * fobar * self%tgas * self%ts
 
-        call self%slingo(rmu0, clwp, re)
+        ! call self%slingo(rmu0, clwp, re)
+        call slingo(rmu0, clwp, re, &
+           self%lib%rows, &
+           self%lib%slingo_adapted%tab(:,1), &  ! asl
+           self%lib%slingo_adapted%tab(:,2), &  ! bsl
+           self%lib%slingo_adapted%tab(:,5), &  ! csl
+           self%lib%slingo_adapted%tab(:,6), &  ! dsl
+           self%lib%slingo_adapted%tab(:,3), &  ! esl
+           self%lib%slingo_adapted%tab(:,4), &  ! fsl
+           self%tcd, self%tcs)
 
         self%edcld = daycor * cosunz * fobar * self%tgas * self%tcd
         self%escld = daycor * cosunz * fobar * self%tgas * self%tcs

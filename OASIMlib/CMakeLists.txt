@@ -7,9 +7,12 @@ add_library(oasim SHARED oasim.f90
                          config.f90
                          tables.f90
                          matrix_read.f90
-                         slingo.f90
-                         clrtrans.f90
-                         light.f90
+                         slingo_standalone.f90
+                        #  slingo.f90
+                        #  clrtrans.f90
+                        clrtrans_standalone.f90
+                        light_standalone.f90
+                        #  light.f90
                          ocalbedo.f90
                          sunmod.f90
                          sfcirr.f90

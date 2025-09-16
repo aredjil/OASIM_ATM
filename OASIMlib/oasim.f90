@@ -40,9 +40,9 @@ module oasim
 
             procedure, public :: monrad
             procedure, public :: monrad_debug
-            procedure :: slingo
-            procedure :: clrtrans
-            procedure :: light
+            ! procedure :: slingo
+            ! procedure :: clrtrans
+            ! procedure :: light
             procedure :: ocalbedo
             procedure :: sunmod
             procedure :: sfcirr
@@ -60,27 +60,70 @@ module oasim
         real(kind=real_kind), parameter :: rad_1 = pi / 180.0d0 
 
         interface
-            module subroutine slingo(self, rmu0, clwp, cre)   
-                use :: oasim_common, only: real_kind    
-                class(calc_unit) :: self
+            ! module subroutine slingo(self, rmu0, clwp, cre)   
+            !     use :: oasim_common, only: real_kind    
+            !     class(calc_unit) :: self
+            !     real(kind=real_kind), intent(in) :: rmu0, clwp, cre
+            ! end subroutine slingo
+            module subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
+                use :: oasim_common, only: real_kind
                 real(kind=real_kind), intent(in) :: rmu0, clwp, cre
+                integer, intent(in) :: rows
+                real(kind=real_kind), dimension(rows), intent(in) :: asl, bsl, csl, dsl, esl, fsl
+                real(kind=real_kind), dimension(rows), intent(out) :: tcd, tcs
             end subroutine slingo
 
-            module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
-                use :: oasim_common, only: real_kind 
-                class(calc_unit) :: self
+            ! module subroutine clrtrans(self, cosunz, rm, rmp, ws, relhum, am, vi, error)
+            !     use :: oasim_common, only: real_kind 
+            !     class(calc_unit) :: self
+            !     real(kind=real_kind), intent(in) :: cosunz, rm, rmp, ws, relhum, am, vi
+            !     logical, intent(out) :: error
+            ! end subroutine clrtrans
+            module subroutine clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
+                          rows, thray, ta, wa, asym, rlamu, td, ts, error)
+                use :: oasim_common, only: real_kind
                 real(kind=real_kind), intent(in) :: cosunz, rm, rmp, ws, relhum, am, vi
+                integer, intent(in) :: rows
+                real(kind=real_kind), dimension(rows), intent(in) :: thray, rlamu
+                real(kind=real_kind), dimension(rows), intent(inout) :: ta, wa, asym
+                real(kind=real_kind), dimension(rows), intent(out) :: td, ts
                 logical, intent(out) :: error
             end subroutine clrtrans
 
-            module subroutine light(self, sunz, cosunz, daycor, pres, ws, ozone, wvapor, &
-                relhum, am, vi, cov, clwp, re, error)
-                use :: oasim_common, only: real_kind
-                class(calc_unit) :: self
-                real(kind=real_kind), intent(in) :: sunz, cosunz, daycor, pres, ws, ozone
-                real(kind=real_kind), intent(in) :: wvapor, relhum, am, vi, cov, clwp, re              
-                logical, intent(out) :: error
-            end subroutine light
+
+            module subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
+                                am, vi, cov, clwp, re, rows,                     &
+                                fobar, oza, awv, ao, aco2,                       &
+                                tab2, asl, bsl, csl, dsl, esl, fsl,              &
+                                ta, wa, asym, rlamu,                             &
+                                td, ts, tcd, tcs, tgas,                          &
+                                ed, es, edclr, esclr, edcld, escld,              &
+                                error)
+                        implicit none
+                        real(kind=real_kind), intent(in) :: sunz, cosunz, daycor, pres, ws, ozone
+                        real(kind=real_kind), intent(in) :: wvapor, relhum, am, vi, cov, clwp, re
+                        integer, intent(in)      :: rows
+                        real(kind=real_kind), intent(in) :: fobar(rows), oza(rows), awv(rows), ao(rows), aco2(rows)
+                        real(kind=real_kind), intent(in) :: tab2(rows)
+                        real(kind=real_kind), intent(in) :: asl(rows), bsl(rows), csl(rows), dsl(rows), esl(rows), fsl(rows)
+                        
+                        real(kind=real_kind), intent(inout) :: ta(rows), wa(rows), asym(rows)
+                        real(kind=real_kind), intent(in)    :: rlamu(rows)
+                        
+                        real(kind=real_kind), intent(out) :: td(rows), ts(rows), tcd(rows), tcs(rows), tgas(rows)
+                        real(kind=real_kind), intent(out) :: ed(rows), es(rows), edclr(rows), esclr(rows), edcld(rows), escld(rows)
+
+                        logical, intent(out) :: error
+             end subroutine light
+
+            ! module subroutine light(self, sunz, cosunz, daycor, pres, ws, ozone, wvapor, &
+            !     relhum, am, vi, cov, clwp, re, error)
+            !     use :: oasim_common, only: real_kind
+            !     class(calc_unit) :: self
+            !     real(kind=real_kind), intent(in) :: sunz, cosunz, daycor, pres, ws, ozone
+            !     real(kind=real_kind), intent(in) :: wvapor, relhum, am, vi, cov, clwp, re              
+            !     logical, intent(out) :: error
+            ! end subroutine light
 
             module subroutine ocalbedo(self, wsm)
                 use :: oasim_common, only: real_kind
