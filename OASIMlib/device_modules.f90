@@ -87,6 +87,7 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     es = (1.0d0 - ccov1) * esclr + ccov1 * escld
 end subroutine light
 
+!$acc routine (slingo) seq
 subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
     !!! Standalone version - all variables passed as parameters
         use :: oasim_common, only: real_kind
