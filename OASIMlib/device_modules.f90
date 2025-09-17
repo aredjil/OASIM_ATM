@@ -4,7 +4,7 @@ module oasim_device
 
     implicit none
 contains
-    !$acc routine (light) seq
+!$acc routine (light) seq
 subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                             am, vi, cov, clwp, re, rows,                     &
                             fobar, oza, awv, ao, aco2,                       &

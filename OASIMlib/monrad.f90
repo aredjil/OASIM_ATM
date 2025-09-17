@@ -135,9 +135,8 @@ contains
 
         call self%sfcsolz(iyr, iday, sec_b, sec_e, points)
         call self%ocalbedo(wsm)
-        !$acc enter data copyin(self)
+
         call self%sfcirr(iday, sec_c, slp, wsm, oz, wv, rh, taua, asymp, ssalb, ccov, rlwp, cdre, error)
-        !$acc exit data delete(self)
         edout = self%eda * (1.0d0 - self%rod)
         esout = self%esa * (1.0d0 - self%ros)
     end subroutine monrad_debug
