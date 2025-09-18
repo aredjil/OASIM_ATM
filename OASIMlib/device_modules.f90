@@ -53,7 +53,6 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     otmp = (cosunz * cosunz + ozfac1) ** 0.5d0
     rmo = ozfac2 / otmp
     rmp = pres / p0 * rm
-
     do i = 1, rows
         to = oza(i) * ozone * 1.0d-3
         oarg = -to * rmo
@@ -112,7 +111,6 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
-
         do i = 1, rows
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re
@@ -147,7 +145,6 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
             tcd(i) = tdb
             tcs(i) = tdir
         end do
-
 end subroutine slingo
 
     !$acc routine (clrtrans) seq

@@ -18,11 +18,12 @@ contains
         real(kind=real_kind), parameter :: daypersec = 1.0d0 / 86400.0d0
 
         real(kind=real_kind) :: rday, daycor, sunz, cosunz, pres, ws, ozone, wvapor, relhum
-        real(kind=real_kind) :: cov, clwp, re !, sirr
+        real(kind=real_kind) :: cov, clwp, re
         real(kind=real_kind):: am, vi
         real(kind=real_kind), dimension(self%lib%rows) :: ed_local, es_local        
         
-        integer :: i !, j
+        integer :: i
+
         am = self%lib%init_parameters%am
         vi = self%lib%init_parameters%vi
 
@@ -33,7 +34,21 @@ contains
         daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
         daycor = daycor * daycor
 
-
+        ! OpenACC data region - manages all the data transfers
+        !$acc data copyin(slp(:), wsm(:), oz(:), wv(:), rh(:)) &
+        !$acc      copyin(ccov(:), rlwp(:), cdre(:)) &
+        !$acc      copyin(taua(:,:), asymp(:,:), ssalb(:,:)) &
+        !$acc      copyin(self%solz(:), self%rlamu(:)) &
+        !$acc      copyin(self%lib%atmo_adapted%tab(:,:)) &
+        !$acc      copyin(self%lib%slingo_adapted%tab(:,:)) &
+        !$acc      copy(self%eda(:,:), self%esa(:,:)) &
+        !$acc      copy(self%ta(:), self%wa(:), self%asym(:)) &
+        !$acc      create(self%td(:), self%ts(:), self%tcd(:), self%tcs(:), self%tgas(:)) &
+        !$acc      create(self%ed(:), self%es(:), self%edclr(:), self%esclr(:)) &
+        !$acc      create(self%edcld(:), self%escld(:)) &
+        !$acc      create(ed_local(:), es_local(:))
+        
+        !$acc parallel loop gang vector private(ed_local, es_local)
         do i = 1, self%p_size
             cosunz = cos(self%solz(i) * rad_1)
             sunz = self%solz(i)
@@ -45,13 +60,9 @@ contains
                 wvapor = wv(i)
                 relhum = rh(i)
 
-                ! self%ta = taua(i,:)
-                ! self%asym = asymp(i,:)
-                ! self%wa = ssalb(i,:)
-
-                ! self%ta = taua(i,:)
-                ! self%asym = asymp(i,:)
-                ! self%wa = ssalb(i,:)
+                self%ta(:) = taua(i,:)
+                self%asym(:) = asymp(i,:)
+                self%wa(:) = ssalb(i,:)
  
                 cov = ccov(i)
                 clwp = rlwp(i)
@@ -71,17 +82,17 @@ contains
                                       self%lib%slingo_adapted%tab(:,6), & ! dsl
                                       self%lib%slingo_adapted%tab(:,3), & ! esl
                                       self%lib%slingo_adapted%tab(:,4), & ! fsl
-                                      taua(i,:), ssalb(i,:), asymp(i,:), self%rlamu,            &
+                                      self%ta, self%wa, self%asym, self%rlamu,            &
                                       self%td, self%ts, self%tcd, self%tcs, self%tgas,     &
                                       ed_local, es_local, self%edclr, self%esclr, self%edcld, self%escld, &
                                       error)
-                ! sirr = 0.0
-                self%eda(i,:) = ed_local
-                self%esa(i,:) = es_local
-
-                ! sirr = sum(self%eda(i,:)) + sum(self%esa(i,:))
+                
+                self%eda(i,:) = ed_local(:)
+                self%esa(i,:) = es_local(:)
           end if
         end do
+        !$acc end parallel loop
+        !$acc end data
 
-    end subroutine sfcirr
+end subroutine sfcirr
 end submodule oasim_sfcirr

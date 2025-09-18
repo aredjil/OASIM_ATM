@@ -41,7 +41,7 @@ contains
         rmo = ozfac2 / otmp
 
         rmp = pres / p0 * rm
-
+        
         do i = 1, self%lib%rows
             to = oza(i) * ozone * 1.0d-3
             oarg = -to * rmo
