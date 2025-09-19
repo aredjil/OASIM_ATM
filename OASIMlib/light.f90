@@ -56,6 +56,7 @@ contains
             warg = wtmp2 / wtmp
             self%tgas(i) = exp(oarg + garg + warg)
         end do
+        
         ! call self%clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, error)
         call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
              self%lib%rows, &

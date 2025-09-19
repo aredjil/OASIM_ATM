@@ -4,7 +4,7 @@ module oasim_device
 
     implicit none
 contains
-!$acc routine (light) seq
+    !$acc routine (light) seq
 subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                             am, vi, cov, clwp, re, rows,                     &
                             fobar, oza, awv, ao, aco2,                       &
@@ -53,6 +53,7 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     otmp = (cosunz * cosunz + ozfac1) ** 0.5d0
     rmo = ozfac2 / otmp
     rmp = pres / p0 * rm
+
     do i = 1, rows
         to = oza(i) * ozone * 1.0d-3
         oarg = -to * rmo
@@ -111,6 +112,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
+
         do i = 1, rows
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re
@@ -145,6 +147,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
             tcd(i) = tdb
             tcs(i) = tdir
         end do
+
 end subroutine slingo
 
     !$acc routine (clrtrans) seq
@@ -192,18 +195,18 @@ end subroutine slingo
                 bfs = alg * (0.0783d0 + alg * (-0.3824d0 - alg * 0.5874d0))
             end if
 
-            if (ta(i) < 0.0d0 .or. omegaa < 0.0d0) then
-                write(error_unit, *) "ERROR in ta or omegaa"
-                write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
-                error = .true.
-            end if
+            ! if (ta(i) < 0.0d0 .or. omegaa < 0.0d0) then
+            !     write(error_unit, *) "ERROR in ta or omegaa"
+            !     write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
+            !     error = .true.
+            ! end if
 
-            fa = 1.0d0 - 0.50d0 * exp((afs + bfs * cosunz) * cosunz)
-            if (fa < 0.0d0) then
-                write(error_unit, *) "ERROR in Fa"
-                write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
-                error = .true.
-            end if
+            ! fa = 1.0d0 - 0.50d0 * exp((afs + bfs * cosunz) * cosunz)
+            ! if (fa < 0.0d0) then
+            !     write(error_unit, *) "ERROR in Fa"
+            !     write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
+            !     error = .true.
+            ! end if
 
             tarm = ta(i) * rm
             atra = exp(-tarm)
