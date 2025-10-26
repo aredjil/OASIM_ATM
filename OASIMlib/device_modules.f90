@@ -4,7 +4,7 @@ module oasim_device
 
     implicit none
 contains
-    !$acc routine (light) seq
+!$acc routine (light) seq 
 subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                             am, vi, cov, clwp, re, rows,                     &
                             fobar, oza, awv, ao, aco2,                       &
@@ -28,7 +28,6 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     ! In/Out arrays
     real(kind=real_kind), intent(out) :: td(rows), ts(rows), tcd(rows), tcs(rows), tgas(rows)
     real(kind=real_kind), intent(out) :: ed(rows), es(rows), edclr(rows), esclr(rows), edcld(rows), escld(rows)
-
     ! Other outputs
     logical, intent(out) :: error
 
@@ -41,11 +40,11 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     real(kind=real_kind) :: gtmp, gtmp2, garg, wtmp, wtmp2, warg, ccov1
     integer :: i
 
-    if (pres < 0.0d0 .or. ws < 0.0d0 .or. relhum < 0.0d0 .or. ozone < 0.0d0 .or. wvapor < 0.0d0) then
-        ed = 0.0d0
-        es = 0.0d0
-        return
-    end if
+    ! if (pres < 0.0d0 .or. ws < 0.0d0 .or. relhum < 0.0d0 .or. ozone < 0.0d0 .or. wvapor < 0.0d0) then
+    !     ed = 0.0d0
+    !     es = 0.0d0
+    !     return
+    ! end if
 
     rtmp = (93.885d0 - sunz) ** (-1.253d0)
     rmu0 = cosunz + 0.15d0 * rtmp
@@ -71,12 +70,13 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     end do
 
     ! Atmospheric transmission
-    ! call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, rows, tab2, td, ts, error)
+    !! call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, rows, tab2, td, ts, error)
     call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, rows, tab2, ta, wa, asym, rlamu, td, ts, error)
+    
     edclr = daycor * cosunz * fobar * tgas * td
     esclr = daycor * cosunz * fobar * tgas * ts
 
-    ! Slingo parameterization
+    ! ! Slingo parameterization
     call slingo(rmu0, clwp, re, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
     edcld = daycor * cosunz * fobar * tgas * tcd
@@ -150,7 +150,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
 end subroutine slingo
 
-    !$acc routine (clrtrans) seq
+    !$acc routine (clrtrans) seq 
     subroutine clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
                                          rows, thray, ta, wa, asym, rlamu, td, ts, error)
     !!! Standalone version - all variables passed as parameters
@@ -195,18 +195,18 @@ end subroutine slingo
                 bfs = alg * (0.0783d0 + alg * (-0.3824d0 - alg * 0.5874d0))
             end if
 
-            ! if (ta(i) < 0.0d0 .or. omegaa < 0.0d0) then
-            !     write(error_unit, *) "ERROR in ta or omegaa"
-            !     write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
-            !     error = .true.
-            ! end if
+            if (ta(i) < 0.0d0 .or. omegaa < 0.0d0) then
+                write(error_unit, *) "ERROR in ta or omegaa"
+                write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
+                error = .true.
+            end if
 
-            ! fa = 1.0d0 - 0.50d0 * exp((afs + bfs * cosunz) * cosunz)
-            ! if (fa < 0.0d0) then
-            !     write(error_unit, *) "ERROR in Fa"
-            !     write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
-            !     error = .true.
-            ! end if
+            fa = 1.0d0 - 0.50d0 * exp((afs + bfs * cosunz) * cosunz)
+            if (fa < 0.0d0) then
+                write(error_unit, *) "ERROR in Fa"
+                write(error_unit, *) "nl, ta, wa, asym = ", i, ta(i), wa(i), asym(i)
+                error = .true.
+            end if
 
             tarm = ta(i) * rm
             atra = exp(-tarm)
@@ -221,7 +221,7 @@ end subroutine slingo
         end do
     end subroutine clrtrans
 
-!$acc routine (navaer) seq
+!$acc routine (navaer) seq 
 subroutine navaer(relhum, am, vi, ws, beta, eta, wa, afs, bfs)
         implicit none
 
