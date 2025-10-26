@@ -2,12 +2,14 @@ program benchmark
     use oasim
     ! Calling the netcdf library to use it for opening and reading the data from the file 
     use netcdf 
+    use openacc
+    
     implicit none
     !----------------------------
     logical :: error
     ! Vriables for timing the main loop 
     !----------------------------
-    ! real :: start, finish, elapsed
+     real :: start, finish, elapsed
     ! netCDF variables section
     !------------------------------------------------------------------------------------ 
     ! Netcdf variables 
@@ -15,7 +17,8 @@ program benchmark
     integer:: ncid, varid, retval
     ! Dimensions variables  412300
     !---------------------
-    integer, parameter :: n_iter = 300, n_points = 10, n_waves = 33 
+    integer, parameter :: n_iter = 300, n_points = 1000, n_waves = 33
+
     
     ! Variables to read from NetCDF
     !-------------------
@@ -65,6 +68,7 @@ program benchmark
     allocate(asymp(n_points, n_waves, n_iter))
     allocate(ssalb(n_points, n_waves, n_iter))
     allocate(lat(n_points), lon(n_points))
+
 
     ! Opening the netcdf file and reading data
     !-----------------------------------------
@@ -158,7 +162,7 @@ program benchmark
     ! Main computation loop
     !---------------------
     
-    ! call cpu_time(start) ! Starting the timing 
+     call cpu_time(start) ! Starting the timing 
     ! write(*, *) "Starting benchmark computations..."
     
     main_loop:do iter = 1, n_iter
@@ -203,10 +207,10 @@ program benchmark
         
     end do main_loop
     ! End the timing 
-    ! call cpu_time(finish)
+     call cpu_time(finish)
 
-    ! elapsed = finish - start
-    ! print *, 'Elapsed CPU time (seconds):', elapsed
+     elapsed = finish - start
+     print *, 'Elapsed CPU time (seconds):', elapsed
     ! Clean up
     !---------
     call calc%finalize()
