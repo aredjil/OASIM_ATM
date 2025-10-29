@@ -4,7 +4,7 @@ module oasim_device
 
     implicit none
 contains
-!$acc routine (light) seq 
+!$acc routine (light) vector 
 subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                             am, vi, cov, clwp, re, rows,                     &
                             fobar, oza, awv, ao, aco2,                       &
@@ -40,11 +40,11 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     real(kind=real_kind) :: gtmp, gtmp2, garg, wtmp, wtmp2, warg, ccov1
     integer :: i
 
-    ! if (pres < 0.0d0 .or. ws < 0.0d0 .or. relhum < 0.0d0 .or. ozone < 0.0d0 .or. wvapor < 0.0d0) then
-    !     ed = 0.0d0
-    !     es = 0.0d0
-    !     return
-    ! end if
+    if (pres < 0.0d0 .or. ws < 0.0d0 .or. relhum < 0.0d0 .or. ozone < 0.0d0 .or. wvapor < 0.0d0) then
+        ed = 0.0d0
+        es = 0.0d0
+        return
+    end if
 
     rtmp = (93.885d0 - sunz) ** (-1.253d0)
     rmu0 = cosunz + 0.15d0 * rtmp
@@ -53,6 +53,7 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     rmo = ozfac2 / otmp
     rmp = pres / p0 * rm
 
+    !$acc loop vector
     do i = 1, rows
         to = oza(i) * ozone * 1.0d-3
         oarg = -to * rmo
@@ -70,7 +71,6 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     end do
 
     ! Atmospheric transmission
-    !! call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, rows, tab2, td, ts, error)
     call clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, rows, tab2, ta, wa, asym, rlamu, td, ts, error)
     
     edclr = daycor * cosunz * fobar * tgas * td
@@ -87,7 +87,7 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     es = (1.0d0 - ccov1) * esclr + ccov1 * escld
 end subroutine light
 
-!$acc routine (slingo) seq
+!$acc routine (slingo) vector
 subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
     !!! Standalone version - all variables passed as parameters
         use :: oasim_common, only: real_kind
@@ -112,7 +112,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
-
+        !$acc loop vector
         do i = 1, rows
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re
@@ -150,7 +150,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
 end subroutine slingo
 
-    !$acc routine (clrtrans) seq 
+    !$acc routine (clrtrans) vector 
     subroutine clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
                                          rows, thray, ta, wa, asym, rlamu, td, ts, error)
     !!! Standalone version - all variables passed as parameters
@@ -176,6 +176,7 @@ end subroutine slingo
         call navaer(relhum, am, vi, ws, beta, eta, wa1, afs, bfs)
 
         error = .false.
+        !$acc loop vector
         do i = 1, rows
             rtra = exp(-thray(i) * rmp)
             if (ta(i) < 0.0d0) then

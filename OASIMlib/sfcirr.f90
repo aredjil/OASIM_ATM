@@ -1,5 +1,7 @@
 submodule (oasim) oasim_sfcirr
     use oasim_device, only: light, clrtrans, slingo
+    use openacc 
+
     implicit none
 contains
     module subroutine sfcirr(self, iday, sec_c, slp, wsm, oz, wv, rh, &
@@ -17,22 +19,26 @@ contains
         real(kind=real_kind) :: rday, daycor, sunz, cosunz, pres, ws, ozone, wvapor, relhum
         real(kind=real_kind) :: cov, clwp, re
         real(kind=real_kind) :: am, vi
-        real(kind=real_kind), dimension(:), allocatable :: ed_local, es_local
         integer :: j, rows_size
 
         ! Local copies of frequently accessed derived type components
         real(kind=real_kind), dimension(:), allocatable :: fobar, oza, awv, ao, aco2, tab2
         real(kind=real_kind), dimension(:), allocatable :: asl, bsl, csl, dsl, esl, fsl
+        
+        integer, allocatable :: daylight_idx(:)
+        integer :: nvalid, i 
+        integer :: ngpus, g, devtype, start_idx, end_idx, chunk
+        integer :: local_chunk_size
+        
+        ! Per-GPU allocatable arrays
+        real(kind=real_kind), dimension(:), allocatable :: ed_local, es_local
         real(kind=real_kind), dimension(:), allocatable :: ta_local, wa_local, asym_local
         real(kind=real_kind), dimension(:), allocatable :: rlamu_local, td_local, ts_local
         real(kind=real_kind), dimension(:), allocatable :: tcd_local, tcs_local, tgas_local
-        real(kind=real_kind), dimension(:), allocatable :: edclr_local, esclr_local, edcld_local, escld_local
-        
-        ! To remove the if statement from inside the loop and avoid branching 
-        integer, allocatable :: daylight_idx(:)
-        integer :: nvalid, i 
+        real(kind=real_kind), dimension(:), allocatable :: edclr_local, esclr_local
+        real(kind=real_kind), dimension(:), allocatable :: edcld_local, escld_local
+        real(kind=real_kind), dimension(:, :), allocatable :: ed_host, es_host
 
-        
         am = self%lib%init_parameters%am
         vi = self%lib%init_parameters%vi
         rows_size = self%lib%rows
@@ -45,17 +51,13 @@ contains
         daycor = 1.0 + 1.67d-2 * cos(pi2 * (rday - 3.0d0) / 365.0d0)
         daycor = daycor * daycor
 
-        allocate(ed_local(self%lib%rows), es_local(self%lib%rows))
-        ! Allocate and copy data to local arrays to avoid derived type issues
+        ! Allocate local arrays
         allocate(fobar(rows_size), oza(rows_size), awv(rows_size), ao(rows_size))
         allocate(aco2(rows_size), tab2(rows_size))
         allocate(asl(rows_size), bsl(rows_size), csl(rows_size), dsl(rows_size))
         allocate(esl(rows_size), fsl(rows_size))
-        allocate(ta_local(rows_size), wa_local(rows_size), asym_local(rows_size))
-        allocate(rlamu_local(rows_size), td_local(rows_size), ts_local(rows_size))
-        allocate(tcd_local(rows_size), tcs_local(rows_size), tgas_local(rows_size))
-
-        allocate(edclr_local(rows_size), esclr_local(rows_size), edcld_local(rows_size), escld_local(rows_size))
+        allocate(ed_host(self%p_size, rows_size))
+        allocate(es_host(self%p_size, rows_size))
 
         ! Copy data from derived types to local arrays
         fobar = self%lib%atmo_adapted%tab(:,1)
@@ -72,22 +74,8 @@ contains
         esl = self%lib%slingo_adapted%tab(:,3)
         fsl = self%lib%slingo_adapted%tab(:,4)
 
-        ! Copy initial values for arrays that will be modified
-        rlamu_local = self%rlamu
-        td_local = self%td
-        ts_local = self%ts
-        tcd_local = self%tcd
-        tcs_local = self%tcs
-        tgas_local = self%tgas
-        
-        edclr_local = self%edclr
-        esclr_local = self%esclr
-        edcld_local = self%edcld
-        escld_local = self%escld
-
-        ! Mask the data to avoid the if condition inside the main loop 
+        ! Build daylight index
         nvalid = count(self%solz < 90.0d0)
-        
         allocate(daylight_idx(nvalid))
         nvalid = 0
         do i = 1, self%p_size
@@ -96,31 +84,66 @@ contains
                 daylight_idx(nvalid) = i
             end if
         end do
-        !$acc data create(ta_local(1:rows_size), wa_local(1:rows_size), asym_local(1:rows_size), rlamu_local(1:rows_size), &
-        !$acc&            td_local(1:rows_size), ts_local(1:rows_size), tcd_local(1:rows_size), tcs_local(1:rows_size), tgas_local(1:rows_size), &
-        !$acc&            ed_local(1:self%lib%rows), es_local(1:self%lib%rows), edclr_local(1:rows_size), esclr_local(1:rows_size), &
-        !$acc&            edcld_local(1:rows_size), escld_local(1:rows_size)) &
-        
-        !$acc& copyin(oz(1:rows_size), asymp(1:self%p_size,1:rows_size), rlwp(1:rows_size), rh(1:rows_size), &
-        !$acc&           ssalb(1:self%p_size,1:rows_size), slp(1:rows_size), cdre(1:rows_size), &
-        !$acc&           taua(1:self%p_size,1:rows_size), wv(1:rows_size), wsm(1:rows_size), ccov(1:rows_size)) &
 
-        !$acc& copyin(oza(1:rows_size), ao(1:rows_size), awv(1:rows_size), dsl(1:rows_size), &
-        !$acc&      csl(1:rows_size), tab2(1:rows_size), fobar(1:rows_size), bsl(1:rows_size), &
-        !$acc&      esl(1:rows_size), fsl(1:rows_size), asl(1:rows_size), aco2(1:rows_size))
-        !$acc parallel loop gang vector 
-        do j = 1,nvalid
-            i = daylight_idx(j)
-            cosunz = cos(self%solz(i) * rad_1)
-            sunz = self%solz(i)
-            ! if (sunz < 90.0d0) then
+        devtype = acc_device_nvidia
+        ! ngpus = acc_get_num_devices(devtype)
+        ngpus = 4  ! Or keep your manual setting
+        chunk = ceiling(real(nvalid) / ngpus)
+
+        ! print *, "Using", ngpus, "GPUs with chunk size:", chunk
+
+        ! Launch all GPU kernels asynchronously
+        do g = 0, ngpus-1
+            call acc_set_device_num(g, devtype)
+            start_idx = g * chunk + 1
+            end_idx = min((g + 1) * chunk, nvalid)
+            local_chunk_size = end_idx - start_idx + 1
+            
+            if (start_idx > nvalid) cycle  ! Skip if no work for this GPU
+            
+            
+            ! Allocate per-GPU working arrays
+            allocate(ed_local(rows_size), es_local(rows_size))
+            allocate(ta_local(rows_size), wa_local(rows_size), asym_local(rows_size))
+            allocate(rlamu_local(rows_size), td_local(rows_size), ts_local(rows_size))
+            allocate(tcd_local(rows_size), tcs_local(rows_size), tgas_local(rows_size))
+            allocate(edclr_local(rows_size), esclr_local(rows_size))
+            allocate(edcld_local(rows_size), escld_local(rows_size))
+            
+            ! Initialize from main arrays
+            rlamu_local = self%rlamu
+            td_local = self%td
+            ts_local = self%ts
+            tcd_local = self%tcd
+            tcs_local = self%tcs
+            tgas_local = self%tgas
+            edclr_local = self%edclr
+            esclr_local = self%esclr
+            edcld_local = self%edcld
+            escld_local = self%escld
+            
+            !$acc data create(ta_local, wa_local, asym_local, rlamu_local, &
+            !$acc&            td_local, ts_local, tcd_local, tcs_local, tgas_local, &
+            !$acc&            ed_local, es_local, edclr_local, esclr_local, &
+            !$acc&            edcld_local, escld_local) &
+            !$acc& copyin(daylight_idx(start_idx:end_idx), &
+            !$acc&        oz, wv, rh, slp, wsm, ccov, rlwp, cdre, &
+            !$acc&        asymp, ssalb, taua, &
+            !$acc&        oza, ao, awv, dsl, csl, tab2, fobar, &
+            !$acc&        bsl, esl, fsl, asl, aco2) &
+            !$acc& async(g)
+            !$acc parallel loop gang vector vector_length(64) async(g)
+            do j = start_idx, end_idx
+                i = daylight_idx(j)
+                cosunz = cos(self%solz(i) * rad_1)
+                sunz = self%solz(i)
+                
                 pres = slp(i)
                 ws = wsm(i)
                 ozone = oz(i)
                 wvapor = wv(i)
                 relhum = rh(i)
                 
-                ! Copy aerosol properties for this point
                 ta_local(:) = taua(i,:)
                 asym_local(:) = asymp(i,:)
                 wa_local(:) = ssalb(i,:)
@@ -130,35 +153,39 @@ contains
                 re = cdre(i)
 
                 call light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
-                          am, vi, cov, clwp, re, rows_size, &
-                          fobar, oza, awv, ao, aco2, tab2, &
-                          asl, bsl, csl, dsl, esl, fsl, &
-                          ta_local, wa_local, asym_local, rlamu_local, &
-                          td_local, ts_local, tcd_local, tcs_local, tgas_local, &
-                          ed_local, es_local, edclr_local, esclr_local, &
-                          edcld_local, escld_local, error)
-                
+                        am, vi, cov, clwp, re, rows_size, &
+                        fobar, oza, awv, ao, aco2, tab2, &
+                        asl, bsl, csl, dsl, esl, fsl, &
+                        ta_local, wa_local, asym_local, rlamu_local, &
+                        td_local, ts_local, tcd_local, tcs_local, tgas_local, &
+                        ed_local, es_local, edclr_local, esclr_local, &
+                        edcld_local, escld_local, error)
                 self%eda(i,:) = ed_local(:)
                 self%esa(i,:) = es_local(:)
-            ! end if
+            end do
+            !$acc end parallel loop
+            
+            !$acc update host(ed_local, es_local) async(g)
+            !$acc end data
+            
+            ! Deallocate per-GPU arrays after sync
+            deallocate(ed_local, es_local)
+            deallocate(ta_local, wa_local, asym_local)
+            deallocate(rlamu_local, td_local, ts_local)
+            deallocate(tcd_local, tcs_local, tgas_local)
+            deallocate(edclr_local, esclr_local, edcld_local, escld_local)
         end do
-        !$acc end parallel loop 
-        !$acc update host(ed_local, es_local)
-        !$acc end data 
-        ! Copy back modified arrays to derived type components
-        
-        self%rlamu = rlamu_local
-        self%td = td_local
-        self%ts = ts_local
-        self%tcd = tcd_local
-        self%tcs = tcs_local
-        self%tgas = tgas_local
 
-        ! Clean up
+        ! Wait for all GPUs to complete
+        do g = 0, ngpus-1
+            call acc_set_device_num(g, devtype)
+            !$acc wait(g)
+        end do
+
+        ! Clean up shared arrays
         deallocate(fobar, oza, awv, ao, aco2, tab2)
         deallocate(asl, bsl, csl, dsl, esl, fsl)
-        deallocate(ta_local, wa_local, asym_local)
-        deallocate(rlamu_local, td_local, ts_local, tcd_local, tcs_local, tgas_local)
+        deallocate(daylight_idx)
 
     end subroutine sfcirr
 end submodule oasim_sfcirr
