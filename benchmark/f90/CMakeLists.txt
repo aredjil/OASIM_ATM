@@ -6,7 +6,7 @@ option(ENABLE_PROFILING "Enable profiling with gprof" ON)
 # Define profiling flags
 # ---------------------------------------------------------
 if(ENABLE_PROFILING)
-    set(PROFILING_FLAGS "-pg")  
+    # set(PROFILING_FLAGS "-pg")  
     message(STATUS "Enabling profiling flags: ${PROFILING_FLAGS}")
 else()
     set(PROFILING_FLAGS "")
@@ -44,8 +44,7 @@ set_target_properties(benchmark PROPERTIES SUFFIX ".x")
 # Apply profiling flags
 target_compile_options(benchmark PRIVATE ${PROFILING_FLAGS})
 target_link_libraries(benchmark PRIVATE NetCDF::Fortran oasim)
-target_link_options(benchmark PRIVATE -pg)
-
+# target_link_options(benchmark PRIVATE -pg)
 if(USE_MPI)
     target_link_libraries(benchmark PUBLIC MPI::MPI_Fortran)
     target_compile_definitions(benchmark PUBLIC USE_MPI)

@@ -1,7 +1,10 @@
 submodule (oasim) oasim_sfcirr
     use oasim_device, only: light, clrtrans, slingo
+#ifdef _OPENACC
     use openacc 
-
+    use nvtx
+#endif
+    USE OMP_LIB
     implicit none
 contains
     module subroutine sfcirr(self, iday, sec_c, slp, wsm, oz, wv, rh, &
@@ -85,16 +88,23 @@ contains
             end if
         end do
 
-        devtype = acc_device_nvidia
-        ! ngpus = acc_get_num_devices(devtype)
-        ngpus = 4  ! Or keep your manual setting
+#ifdef _OPENACC
+            devtype = acc_device_nvidia
+            ! ngpus = acc_get_num_devices(devtype)
+            ngpus = 1
+        if (ngpus < 1) ngpus = 1
+#else
+            ngpus = 1
+#endif
         chunk = ceiling(real(nvalid) / ngpus)
 
         ! print *, "Using", ngpus, "GPUs with chunk size:", chunk
 
         ! Launch all GPU kernels asynchronously
         do g = 0, ngpus-1
+#ifdef _OPENACC
             call acc_set_device_num(g, devtype)
+#endif
             start_idx = g * chunk + 1
             end_idx = min((g + 1) * chunk, nvalid)
             local_chunk_size = end_idx - start_idx + 1
@@ -121,7 +131,7 @@ contains
             esclr_local = self%esclr
             edcld_local = self%edcld
             escld_local = self%escld
-            
+#ifdef _OPENACC
             !$acc data create(ta_local, wa_local, asym_local, rlamu_local, &
             !$acc&            td_local, ts_local, tcd_local, tcs_local, tgas_local, &
             !$acc&            ed_local, es_local, edclr_local, esclr_local, &
@@ -133,11 +143,15 @@ contains
             !$acc&        bsl, esl, fsl, asl, aco2) &
             !$acc& async(g)
             !$acc parallel loop gang vector vector_length(64) async(g)
+#else 
+            !$OMP PARALLEL DO 
+            !$OMP& SCHEDULE(DYNAMIC)
+#endif
             do j = start_idx, end_idx
                 i = daylight_idx(j)
                 cosunz = cos(self%solz(i) * rad_1)
                 sunz = self%solz(i)
-                
+
                 pres = slp(i)
                 ws = wsm(i)
                 ozone = oz(i)
@@ -147,11 +161,10 @@ contains
                 ta_local(:) = taua(i,:)
                 asym_local(:) = asymp(i,:)
                 wa_local(:) = ssalb(i,:)
-                
+                rlamu_local(:) = self%rlamu(:)
                 cov = ccov(i)
                 clwp = rlwp(i)
                 re = cdre(i)
-
                 call light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                         am, vi, cov, clwp, re, rows_size, &
                         fobar, oza, awv, ao, aco2, tab2, &
@@ -163,11 +176,14 @@ contains
                 self%eda(i,:) = ed_local(:)
                 self%esa(i,:) = es_local(:)
             end do
+#ifdef _OPENACC
             !$acc end parallel loop
-            
             !$acc update host(ed_local, es_local) async(g)
             !$acc end data
-            
+#else
+            !$OMP END PARALLEL DO
+#endif
+
             ! Deallocate per-GPU arrays after sync
             deallocate(ed_local, es_local)
             deallocate(ta_local, wa_local, asym_local)
@@ -177,15 +193,16 @@ contains
         end do
 
         ! Wait for all GPUs to complete
+#ifdef _OPENACC
         do g = 0, ngpus-1
             call acc_set_device_num(g, devtype)
             !$acc wait(g)
         end do
-
+#endif
+        
         ! Clean up shared arrays
         deallocate(fobar, oza, awv, ao, aco2, tab2)
         deallocate(asl, bsl, csl, dsl, esl, fsl)
         deallocate(daylight_idx)
-
     end subroutine sfcirr
 end submodule oasim_sfcirr

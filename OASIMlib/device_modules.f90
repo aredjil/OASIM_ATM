@@ -4,7 +4,9 @@ module oasim_device
 
     implicit none
 contains
-!$acc routine (light) vector 
+#ifdef _OPENACC
+!$acc routine (light) seq 
+#endif 
 subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
                             am, vi, cov, clwp, re, rows,                     &
                             fobar, oza, awv, ao, aco2,                       &
@@ -53,7 +55,6 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     rmo = ozfac2 / otmp
     rmp = pres / p0 * rm
 
-    !$acc loop vector
     do i = 1, rows
         to = oza(i) * ozone * 1.0d-3
         oarg = -to * rmo
@@ -87,7 +88,10 @@ subroutine light(sunz, cosunz, daycor, pres, ws, ozone, wvapor, relhum, &
     es = (1.0d0 - ccov1) * esclr + ccov1 * escld
 end subroutine light
 
-!$acc routine (slingo) vector
+#ifdef _OPENACC
+!$acc routine (slingo) seq
+#endif 
+
 subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
     !!! Standalone version - all variables passed as parameters
         use :: oasim_common, only: real_kind
@@ -112,7 +116,7 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
 
         re = (10.0 + 11.8) * 0.5
         if (cre >= 0.0) re = cre
-        !$acc loop vector
+
         do i = 1, rows
             tauc = clwp * (asl(i) * 1.0d-2 + bsl(i) / re)
             oneomega = csl(i) + dsl(i) * re
@@ -147,10 +151,10 @@ subroutine slingo(rmu0, clwp, cre, rows, asl, bsl, csl, dsl, esl, fsl, tcd, tcs)
             tcd(i) = tdb
             tcs(i) = tdir
         end do
-
 end subroutine slingo
-
-    !$acc routine (clrtrans) vector 
+#ifdef _OPENACC
+!$acc routine (clrtrans) seq
+#endif 
     subroutine clrtrans(cosunz, rm, rmp, ws, relhum, am, vi, &
                                          rows, thray, ta, wa, asym, rlamu, td, ts, error)
     !!! Standalone version - all variables passed as parameters
@@ -176,7 +180,7 @@ end subroutine slingo
         call navaer(relhum, am, vi, ws, beta, eta, wa1, afs, bfs)
 
         error = .false.
-        !$acc loop vector
+
         do i = 1, rows
             rtra = exp(-thray(i) * rmp)
             if (ta(i) < 0.0d0) then
@@ -221,8 +225,9 @@ end subroutine slingo
             ts(i) = dray + daer
         end do
     end subroutine clrtrans
-
-!$acc routine (navaer) seq 
+#ifdef _OPENACC
+!$acc routine (navaer) seq
+#endif 
 subroutine navaer(relhum, am, vi, ws, beta, eta, wa, afs, bfs)
         implicit none
 
@@ -295,5 +300,4 @@ subroutine navaer(relhum, am, vi, ws, beta, eta, wa, afs, bfs)
 
         wa = (-3.2d-3 * am + 0.972d0) * exp(3.06d-4 * relhumnorm)
     end subroutine navaer
-
 end module oasim_device
